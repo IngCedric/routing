@@ -24,9 +24,13 @@ Projet réalisé dans le cadre de l'exercice **« App multi-écrans avec navigat
 
 ## 📱 Captures d'écran
 
-| Accueil (thème clair) | Accueil (thème sombre) | Détail d'un film |
-| :---: | :---: | :---: |
-| ![Accueil en thème clair](screenshots/home_light.png) | ![Accueil en thème sombre](screenshots/home_dark.jpeg) | ![Écran de détail](screenshots/detail.jpeg) |
+| Accueil (thème clair) | Accueil (thème sombre) |
+| :---: | :---: |
+| ![Accueil en thème clair](screenshots/home_light.png) | ![Accueil en thème sombre](screenshots/home_dark.png) |
+
+| Détail d'un film | Formulaire d'ajout |
+| :---: | :---: |
+| ![Écran de détail](screenshots/details.png) | ![Formulaire d'ajout](screenshots/formulaire.png) |
 
 ---
 
