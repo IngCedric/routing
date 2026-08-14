@@ -1,30 +1,81 @@
-// This is a basic Flutter widget test.
+// Tests de l'application CineList.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// On verifie les trois comportements demandes par l'enonce : l'affichage de la
+// liste, la recherche/filtrage, et la validation du formulaire.
 
+import 'package:cinelist/data/watchlist_repository.dart';
+import 'package:cinelist/main.dart';
+import 'package:cinelist/screens/add_movie_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:cinelist/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
+  testWidgets('L\'accueil affiche le catalogue de films', (tester) async {
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('CineList'), findsOneWidget);
+    expect(find.text('Inception'), findsWidgets);
+    expect(find.text('Parasite'), findsWidgets);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('La recherche filtre la liste des films', (tester) async {
+    await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, 'parasite');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Parasite'), findsOneWidget);
+    expect(find.text('Inception'), findsNothing);
+  });
+
+  testWidgets('Le formulaire refuse les champs vides', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddMovieScreen(watchlistRepository: WatchlistRepository()),
+      ),
+    );
+
+    await tester.tap(find.byType(ElevatedButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Le titre est obligatoire'), findsOneWidget);
+    expect(find.text('Le genre est obligatoire'), findsOneWidget);
+    expect(find.text('La note est obligatoire'), findsOneWidget);
+  });
+
+  testWidgets('Le formulaire refuse une note non numerique', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: AddMovieScreen(watchlistRepository: WatchlistRepository()),
+      ),
+    );
+
+    final champs = find.byType(TextFormField);
+    await tester.enterText(champs.at(0), 'Blade Runner');
+    await tester.enterText(champs.at(1), 'Science-Fiction');
+    await tester.enterText(champs.at(2), 'abc');
+
+    await tester.tap(find.byType(ElevatedButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('La note doit être un nombre valide'), findsOneWidget);
+  });
+
+  test('La watchlist enregistre un film ajoute depuis le formulaire', () {
+    final repository = WatchlistRepository();
+
+    repository.ajouterDepuisFormulaire(
+      titre: 'Blade Runner',
+      genre: 'Science-Fiction',
+      note: 4.5,
+    );
+
+    expect(repository.getAll().length, 1);
+    expect(repository.getAll().first.titre, 'Blade Runner');
+    // Le film ajoute doit etre retrouvable par son id, pour l'ecran de detail.
+    final id = repository.getAll().first.id;
+    expect(repository.getById(id), isNotNull);
   });
 }

@@ -10,11 +10,15 @@ Projet réalisé dans le cadre de l'exercice **« App multi-écrans avec navigat
 ## ✨ Fonctionnalités
 
 - **Catalogue de films** avec recherche par titre en temps réel et filtrage par genre
-- **Fiche détaillée** de chaque film (genre, année, note, synopsis)
+- **Carrousel « À l'affiche »** mettant en avant les films les mieux notés
+- **Fiche détaillée** de chaque film (genre, année, note, synopsis), avec une
+  animation d'affiche partagée depuis la liste
 - **Watchlist personnelle** alimentée par un formulaire d'ajout
 - **Formulaire validé** (titre, genre, note) avec messages d'erreur explicites
 - **Thème clair / sombre** basculable depuis la barre d'application
-- **Interface responsive** : liste verticale sur mobile, grille sur tablette
+- **Interface responsive** : liste verticale sur mobile, grille de 2 colonnes sur
+  tablette et 3 colonnes sur grand écran ; les écrans de détail, d'ajout et de
+  watchlist limitent leur largeur de lecture
 
 ---
 
@@ -30,16 +34,23 @@ Projet réalisé dans le cadre de l'exercice **« App multi-écrans avec navigat
 
 La navigation est gérée par [`go_router`](https://pub.dev/packages/go_router).
 
-| Route | Écran | Rôle |
-| --- | --- | --- |
-| `/` | `HomeScreen` | Liste des films, recherche et filtres par genre |
-| `/detail/:id` | `DetailScreen` | Détail d'un film, reçoit l'`id` en paramètre de route |
-| `/add` | `AddMovieScreen` | Formulaire d'ajout d'un film à la watchlist |
-| `/watchlist` | `WatchlistScreen` | Films ajoutés par l'utilisateur |
+Chaque route porte un **nom**, ce qui évite d'écrire les chemins à la main dans les
+écrans : la navigation se fait avec `context.pushNamed(...)`.
 
-Le passage de paramètres se fait via l'URL : depuis l'accueil, un appui sur une carte
-déclenche `context.push('/detail/${film.id}')`, et l'écran de détail relit cette valeur
-avec `state.pathParameters['id']`.
+| Route | Nom | Écran | Rôle |
+| --- | --- | --- | --- |
+| `/` | `accueil` | `HomeScreen` | Liste des films, recherche et filtres par genre |
+| `/detail/:id` | `detail` | `DetailScreen` | Détail d'un film, reçoit l'`id` en paramètre de route |
+| `/add` | `ajout` | `AddMovieScreen` | Formulaire d'ajout d'un film à la watchlist |
+| `/watchlist` | `watchlist` | `WatchlistScreen` | Films ajoutés par l'utilisateur |
+
+**Passage de paramètres** : depuis l'accueil, un appui sur une carte déclenche
+
+```dart
+context.pushNamed(Routes.detail, pathParameters: {'id': '${film.id}'});
+```
+
+et l'écran de détail relit la valeur avec `state.pathParameters['id']`.
 
 ---
 
@@ -47,30 +58,41 @@ avec `state.pathParameters['id']`.
 
 ```
 lib/
-├── main.dart                     # Point d'entrée, MaterialApp.router et gestion du thème
+├── main.dart                       # Point d'entrée, MaterialApp.router et thème
 ├── data/
-│   ├── movies_repository.dart    # Catalogue de films (source de données)
-│   └── watchlist_repository.dart # Watchlist en mémoire + valeurs par défaut
+│   ├── movies_repository.dart      # Catalogue de films (source de données)
+│   └── watchlist_repository.dart   # Watchlist en mémoire + valeurs par défaut
 ├── models/
-│   └── movie.dart                # Modèle Movie
+│   └── movie.dart                  # Modèle Movie
 ├── router/
-│   └── app_router.dart           # Configuration GoRouter
+│   └── app_router.dart             # Routes nommées GoRouter
 ├── screens/
-│   ├── HomeScreen.dart
-│   ├── DetailScreen.dart
-│   ├── AddMovieScreen.dart
-│   └── WatchlistScreen.dart
+│   ├── home_screen.dart
+│   ├── detail_screen.dart
+│   ├── add_movie_screen.dart
+│   └── watchlist_screen.dart
 ├── theme/
-│   └── app_theme.dart            # Thèmes clair et sombre
-└── widgets/                      # Widgets réutilisables
-    ├── movie_card.dart           # Carte d'un film
-    ├── genre_chip.dart           # Puce de genre sélectionnable
-    └── rating_stars.dart         # Notation en étoiles
+│   ├── app_theme.dart              # Thèmes clair et sombre
+│   └── genre_style.dart            # Dégradé et icône propres à chaque genre
+└── widgets/                        # Widgets réutilisables
+    ├── movie_card.dart             # Carte d'un film dans une liste ou grille
+    ├── movie_poster.dart           # Affiche générée à partir du genre
+    ├── featured_movie_card.dart    # Grande carte du carrousel « À l'affiche »
+    ├── genre_chip.dart             # Puce de genre, filtre ou étiquette
+    ├── rating_stars.dart           # Notation en étoiles (demi-étoiles gérées)
+    ├── rating_badge.dart           # Pastille compacte de note
+    ├── section_header.dart         # Titre de section avec compteur
+    ├── empty_state.dart            # Message de liste vide illustré
+    └── fade_slide_in.dart          # Apparition en fondu décalée
 ```
 
 **Séparation UI / données** : aucune donnée n'est écrite en dur dans les widgets.
 Les films proviennent des repositories du dossier `data/`, et les écrans ne font
 que les afficher ou transmettre la saisie de l'utilisateur.
+
+**Affiches** : le catalogue ne fournit pas d'images, donc chaque affiche est générée
+à partir du genre du film (dégradé, icône, initiales du titre). Deux films du même
+genre partagent la même ambiance de couleur.
 
 ---
 
@@ -152,7 +174,12 @@ L'APK est produit dans `build/app/outputs/flutter-apk/app-release.apk`.
 ### Vérifier le code
 
 ```bash
-flutter analyze
+flutter analyze   # analyse statique : aucun problème attendu
+flutter test      # 5 tests : affichage, recherche, validation, watchlist
 ```
+
+Les tests couvrent l'affichage du catalogue, le filtrage par la recherche, les deux
+cas d'erreur du formulaire (champs vides et note non numérique) et l'enregistrement
+d'un film dans la watchlist.
 
 ---

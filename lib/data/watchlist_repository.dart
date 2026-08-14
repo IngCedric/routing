@@ -10,6 +10,11 @@ class WatchlistRepository {
 
   List<Movie> getAll() => _films;
 
+  // retourne un film ajoute par l'utilisateur, ou null s'il n'existe pas
+  Movie? getById(int id) {
+    return _films.where((f) => f.id == id).firstOrNull;
+  }
+
   void ajouter(Movie film) {
     _films.add(film);
   }
